@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stella Maris SecOps App — Simulator SIEM &amp; SOAR</title>
+<link rel="stylesheet" href="css/style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>🛡️</text></svg>">
+</head>
+<body>
+
+<!-- ================= HEADER ================= -->
+<header id="topbar">
+  <div class="brand">
+    <div class="brand-mark">🛡️</div>
+    <div class="brand-text">
+      <h1>Stella Maris SecOps App</h1>
+      <p>simulator SIEM dan SOAR by GAIS+PaulNiek @SMITT Tobelo 2026</p>
+    </div>
+  </div>
+  <div class="brand-right">
+    <span id="netBadge" class="badge badge-off">● offline</span>
+    <button class="btn btn-ghost" data-act="open-superadmin">🔐 SuperAdmin</button>
+    <button class="btn btn-ghost" data-act="open-guide">📖 Buku Panduan</button>
+    <button class="btn btn-ghost" data-act="logout" id="btnLogout" hidden>↩ Keluar</button>
+  </div>
+</header>
+
+<!-- ================= SCREEN: SETUP ================= -->
+<section id="scr-setup" class="screen active">
+  <div id="saBanner" class="sa-banner" hidden></div>
+  <div class="hero">
+    <h2>Cyber Range Simulator — UTS / UAS / Latihan / Ulangan Harian</h2>
+    <p>Latihan SecOps dua kubu real-time: <b>Blue Team</b> (SOC Analyst &amp; Security Administrator) bertahan menjaga uptime 100%,
+       <b>Red Team</b> (Intruder &amp; Ethical Hacker) menembus sistem mengikuti kerangka MITRE ATT&amp;CK.</p>
+    <div class="hero-strip">
+      <span>🏫 <b id="heroInst"></b></span>
+      <span>👨‍🏫 Penguji: <b id="heroPenguji"></b></span>
+      <span>🔗 Multi-user WebSocket via Room ID</span>
+      <span>🖥️ Mendukung Dual View split-screen</span>
+    </div>
+  </div>
+
+  <div class="setup-grid">
+    <!-- Ruang & Peran -->
+    <div class="card">
+      <h3><span class="step">1</span> Ruang Sesi &amp; Peran Anda</h3>
+      <label>Nama Lengkap / Panggilan
+        <input id="inMyName" type="text" placeholder="cth: Kelompok 3 — Andi" maxlength="40">
+      </label>
+      <label>Peran di perangkat ini
+        <select id="inMyRole">
+          <option value="guru">👨‍🏫 Guru Penguji (Host / Pengendali Sesi)</option>
+          <option value="blue">🛡️ Blue Team — SOC Analyst / Security Administrator</option>
+          <option value="red">⚔️ Red Team — Intruder / Ethical Hacker</option>
+          <option value="dual" selected>🖥️ Dual View — Split Screen Blue | Red (proyektor)</option>
+        </select>
+      </label>
+      <label>Room ID
+        <div class="row">
+          <input id="inRoom" type="text" placeholder="SM-XXX-00" maxlength="24" style="text-transform:uppercase">
+          <button class="btn btn-mini" data-act="gen-room">🎲 Acak</button>
+        </div>
+      </label>
+      <div class="row btn-row">
+        <button class="btn btn-primary" data-act="create-room">🚀 Buat Ruang (jadi Host)</button>
+        <button class="btn btn-accent" data-act="join-room">🔗 Gabung Ruang</button>
+      </div>
+      <p class="hint">Semua peserta memakai <b>Room ID yang sama</b>. Perangkat pertama yang membuat ruang otomatis menjadi <b>Host</b> dan menjalankan mesin simulasi.</p>
+    </div>
+
+    <!-- Konfigurasi ujian -->
+    <div class="card">
+      <h3><span class="step">2</span> Fleksibilitas Kategori &amp; Durasi</h3>
+      <label>Kategori Sesi
+        <select id="inKategori"></select>
+      </label>
+      <label>Batas Waktu (countdown otomatis)
+        <select id="inDurasi"></select>
+      </label>
+      <label>Jumlah Anggota per Tim
+        <select id="inJumlah"></select>
+      </label>
+      <label>Jenjang / Tingkat Kelas <small>(deteksi KKM otomatis)</small>
+        <select id="inKelas"></select>
+      </label>
+      <div class="kkm-box" id="kkmBox">KKM terdeteksi: <b>—</b></div>
+      <label>Mata Pelajaran
+        <input id="inMapel" type="text" value="Dasar Keamanan Informasi / TJKT">
+      </label>
+      <label>Tanggal Pelaksanaan
+        <input id="inTanggal" type="date">
+      </label>
+      <div class="kkm-box alt" id="docBox">No. Dokumen Berita Acara: <b>—</b></div>
+    </div>
+
+    <!-- Tim Blue -->
+    <div class="card card-blue">
+      <h3><span class="step">3</span> 🛡️ Identitas Tim Blue (SOC)</h3>
+      <label>Nama Kelompok Blue
+        <input id="inBlueTeam" type="text" placeholder="cth: BLUE SENTINEL">
+      </label>
+      <div id="blueMembers"></div>
+      <p class="hint">Peran disesuaikan otomatis: SOC Analyst (Triage), Security Administrator (Firewall), Incident Responder (SOAR), Forensic &amp; Reporting.</p>
+    </div>
+
+    <!-- Tim Red -->
+    <div class="card card-red">
+      <h3><span class="step">4</span> ⚔️ Identitas Tim Red (Intruder)</h3>
+      <label>Nama Kelompok Red
+        <input id="inRedTeam" type="text" placeholder="cth: RED PHANTOM">
+      </label>
+      <div id="redMembers"></div>
+      <p class="hint">Peran disesuaikan otomatis: Recon Operator, Exploit Developer, Post-Exploitation / C2, Exfiltration Specialist.</p>
+    </div>
+
+    <!-- Penguji & simulator -->
+    <div class="card">
+      <h3><span class="step">5</span> Data Penguji &amp; Background Simulator</h3>
+      <label>Nama Guru Penguji
+        <input id="inPenguji" type="text">
+      </label>
+      <label>Institusi
+        <input id="inInstitusi" type="text">
+      </label>
+      <label>Pengawas Ujian
+        <input id="inPengawas" type="text" placeholder="cth: Nama Pengawas, S.Pd.">
+      </label>
+      <div class="toggle-group">
+        <label class="toggle"><input type="checkbox" id="inRedBot"><span>🤖 RedBot Otonom — mesin menyerang otomatis (menguji kecepatan respon Blue)</span></label>
+        <label class="toggle"><input type="checkbox" id="inBenign" checked><span>🚶 Benign Traffic — trafik wajar siswa/guru + false positive (menguji kejelian triase)</span></label>
+      </div>
+      <div class="secret-note">
+        <b>🔒 Kerahasiaan Nilai (Suspense Effect)</b>
+        Selama simulasi, skor angka <u>tidak ditampilkan</u> ke layar murid. Quick Ribbon hanya menampilkan status
+        <span class="lock-chip">DIRAHASIAKAN 🔒</span>. Skor dibuka lewat Lembar Asesmen Guru (PIN default <b>1234</b>).
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SCREEN: LOBBY ================= -->
+<section id="scr-lobby" class="screen">
+  <div class="lobby-wrap">
+    <div class="card">
+      <h3>🛰️ Ruang <span class="room-code" id="lobbyRoom">—</span></h3>
+      <div id="peerList" class="peer-list"></div>
+      <div class="lobby-summary" id="lobbySummary"></div>
+      <div class="row btn-row" id="lobbyActions">
+        <button class="btn btn-primary" data-act="host-start">▶ Mulai Simulasi</button>
+        <button class="btn btn-ghost" data-act="back-setup">↩ Ubah Pengaturan</button>
+        <button class="btn btn-ghost" data-act="open-guide">📖 Buku Panduan</button>
+      </div>
+      <p class="hint" id="lobbyHint"></p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SCREEN: SIMULASI ================= -->
+<section id="scr-sim" class="screen">
+
+  <!-- QUICK RIBBON -->
+  <div id="ribbon">
+    <div class="rib rib-room"><span class="rib-k">ROOM</span><span class="rib-v" id="ribRoom">—</span></div>
+    <div class="rib rib-kat"><span class="rib-k">KATEGORI</span><span class="rib-v" id="ribKat">—</span></div>
+    <div class="rib rib-kelas"><span class="rib-k">KELAS / KKM</span><span class="rib-v" id="ribKelas">—</span></div>
+    <div class="rib rib-timer" id="ribTimerBox"><span class="rib-k">SISA WAKTU</span><span class="rib-v big" id="ribTimer">00:00</span></div>
+    <div class="rib rib-sla"><span class="rib-k">SLA UPTIME</span><span class="rib-v big" id="ribSla">100%</span></div>
+    <div class="rib rib-threat"><span class="rib-k">ANCAMAN AKTIF</span><span class="rib-v big" id="ribThreat">0</span></div>
+    <div class="rib rib-flag"><span class="rib-k">FLAG RED</span><span class="rib-v big" id="ribFlag">0</span></div>
+    <div class="rib rib-score blue"><span class="rib-k">🛡️ NILAI BLUE</span><span class="rib-v big" id="ribBlue">DIRAHASIAKAN 🔒</span></div>
+    <div class="rib rib-score red"><span class="rib-k">⚔️ NILAI RED</span><span class="rib-v big" id="ribRed">DIRAHASIAKAN 🔒</span></div>
+    <div class="rib rib-phase"><span class="rib-v" id="ribPhase">MENUNGGU</span></div>
+  </div>
+
+  <!-- TABS -->
+  <nav id="tabbar"></nav>
+
+  <!-- PANELS -->
+  <div id="panels">
+
+    <!-- ============ BLUE CONSOLE (SIEM) ============ -->
+    <div class="panel" id="p-siem">
+      <div class="panel-head">
+        <h3>🛡️ Blue Console — SIEM <small>Live syslog / Suricata • filter keparahan • pencarian string/IP/protokol • alert triase</small></h3>
+        <div class="siem-stats" id="siemStats"></div>
+      </div>
+      <div class="siem-toolbar">
+        <div class="sev-filter" id="sevFilter">
+          <button class="chip on" data-sev="ALL">SEMUA</button>
+          <button class="chip" data-sev="INFO">INFO</button>
+          <button class="chip" data-sev="WARNING">WARNING</button>
+          <button class="chip" data-sev="ALERT">ALERT</button>
+          <button class="chip" data-sev="CRITICAL">CRITICAL</button>
+          <button class="chip" data-sev="ALERT+">ALERT+CRITICAL</button>
+          <button class="chip" data-sev="UNJUDGED">BELUM TRIASE</button>
+        </div>
+        <input id="siemSearch" type="search" placeholder="🔍 cari string / IP / protokol / aplikasi…  (cth: 203.0.113.66 , union , sshd)">
+        <label class="toggle inline"><input type="checkbox" id="siemAuto" checked><span>auto-scroll</span></label>
+      </div>
+      <div class="siem-body">
+        <div class="log-wrap">
+          <table class="log-table">
+            <thead><tr><th>Waktu</th><th>Sev</th><th>Proto</th><th>Source</th><th>Dest</th><th>App</th><th>Pesan</th><th>Triase</th></tr></thead>
+            <tbody id="logBody"></tbody>
+          </table>
+        </div>
+        <aside class="triage-side">
+          <h4>🎯 Alert Triage Queue</h4>
+          <p class="hint">Tandai tiap alert: <b>TP</b> = ancaman nyata, <b>FP</b> = trafik wajar. Melewatkan alert CRITICAL menurunkan aspek A1.</p>
+          <div id="triageQueue" class="triage-queue"></div>
+          <h4>🚨 Ancaman Berjalan</h4>
+          <div id="activeThreats" class="threat-list"></div>
+        </aside>
+      </div>
+    </div>
+
+    <!-- ============ BLUE AUTOMATION (SOAR) ============ -->
+    <div class="panel" id="p-soar">
+      <div class="panel-head">
+        <h3>⚙️ Blue Automation — SOAR <small>Orchestration, Automation &amp; Response • playbook siap pakai</small></h3>
+        <div class="soar-stats" id="soarStats"></div>
+      </div>
+      <div class="soar-body">
+        <div>
+          <div class="pb-grid" id="pbGrid"></div>
+          <h4 class="sec-title">🧯 Firewall Quick Actions</h4>
+          <div class="quick-actions">
+            <div class="qa">
+              <label>IP sumber penyerang</label>
+              <div class="row">
+                <select id="qaIp"></select>
+                <button class="btn btn-mini btn-blue" data-act="quick-blacklist">⛔ Blacklist Sekarang</button>
+              </div>
+            </div>
+            <div class="qa">
+              <label>Lepas karantina VLAN</label>
+              <div class="row">
+                <select id="qaNode"></select>
+                <button class="btn btn-mini btn-blue" data-act="quick-unquarantine">🔓 Unquarantine</button>
+              </div>
+            </div>
+            <div class="qa">
+              <label>Pulihkan seluruh node</label>
+              <div class="row">
+                <button class="btn btn-mini btn-blue" data-act="quick-restore-all">♻️ Snapshot Restore (semua)</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <aside class="soar-side">
+          <h4>🛡️ Kebijakan Mitigasi Aktif</h4>
+          <div id="mitigList" class="mitig-list"></div>
+          <h4>📊 Rekaman Eksekusi Playbook</h4>
+          <div id="pbHistory" class="pb-history"></div>
+        </aside>
+      </div>
+    </div>
+
+    <!-- ============ RED TERMINAL ============ -->
+    <div class="panel" id="p-red">
+      <div class="panel-head red">
+        <h3>⚔️ Red Terminal — Kali/Parrot Attack Console <small>IP switcher &amp; proxy chain • daftar target • MITRE ATT&amp;CK arsenal launcher</small></h3>
+        <div class="red-stats" id="redStats"></div>
+      </div>
+      <div class="red-body">
+        <div class="term">
+          <div class="term-out" id="termOut"></div>
+          <div class="term-in">
+            <span class="prompt" id="termPrompt">root@kali:~#</span>
+            <input id="termInput" autocomplete="off" spellcheck="false" placeholder="ketik 'help' untuk daftar perintah…">
+          </div>
+        </div>
+        <aside class="red-side">
+          <h4>🕶️ Sumber Serangan</h4>
+          <div class="ip-switch">
+            <label>IP asli Red</label>
+            <select id="redIpSel"></select>
+            <label class="toggle"><input type="checkbox" id="redProxy"><span>Proxy chain aktif (IP berotasi tiap serangan — menyulitkan blacklist Blue)</span></label>
+            <div class="proxy-node" id="proxyNode">node: —</div>
+          </div>
+          <h4>🎯 Target Server</h4>
+          <div id="redTargets" class="target-list"></div>
+          <h4>🧰 MITRE ATT&amp;CK Arsenal</h4>
+          <div id="arsenal" class="arsenal"></div>
+          <h4>🏴 Akses &amp; Hasil</h4>
+          <div id="redLoot" class="loot"></div>
+        </aside>
+      </div>
+    </div>
+
+    <!-- ============ TOPOLOGI ============ -->
+    <div class="panel" id="p-topo">
+      <div class="panel-head">
+        <h3>🗺️ Peta Topologi Interaktif <small>status kesehatan node infrastruktur SMITT</small></h3>
+      </div>
+      <div class="topo-body">
+        <div class="topo-svg" id="topoSvg"></div>
+        <aside class="topo-side">
+          <h4>Detail Node</h4>
+          <div id="nodeDetail" class="node-detail"><p class="hint">Klik salah satu node pada peta untuk melihat detail.</p></div>
+          <h4>Kesehatan Layanan</h4>
+          <div id="healthBars" class="health-bars"></div>
+        </aside>
+      </div>
+    </div>
+
+    <!-- ============ PAPAN INSIDEN ============ -->
+    <div class="panel" id="p-insiden">
+      <div class="panel-head">
+        <h3>📋 Papan Insiden &amp; Kronologi <small>alur waktu serangan, deteksi, dan mitigasi</small></h3>
+      </div>
+      <div class="inc-body">
+        <div>
+          <h4 class="sec-title">Timeline Serangan</h4>
+          <table class="tbl" id="attackTable">
+            <thead><tr><th>#</th><th>T+</th><th>Taktik / Teknik</th><th>Vektor</th><th>Sumber IP</th><th>Target</th><th>Hasil</th><th>MTTD</th><th>Mitigasi</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <aside>
+          <h4 class="sec-title">Event Feed</h4>
+          <div id="eventFeed" class="event-feed"></div>
+        </aside>
+      </div>
+    </div>
+
+    <!-- ============ GURU ============ -->
+    <div class="panel" id="p-guru">
+      <div class="panel-head">
+        <h3>👨‍🏫 Konsol Guru Penguji <small>kontrol sesi, latar simulator, dan lembar asesmen terkunci PIN</small></h3>
+      </div>
+      <div class="guru-body">
+        <div class="card">
+          <h4 class="sec-title">⏱ Kontrol Sesi</h4>
+          <div class="guru-controls">
+            <button class="btn btn-primary" data-act="host-start">▶ Mulai</button>
+            <button class="btn" data-act="host-pause">⏸ Jeda</button>
+            <button class="btn" data-act="host-resume">⏵ Lanjut</button>
+            <button class="btn btn-danger" data-act="host-stop">⏹ Akhiri &amp; Kunci Nilai</button>
+            <button class="btn btn-ghost" data-act="host-reset">♻ Reset Sesi Baru</button>
+          </div>
+          <div class="guru-clock" id="guruClock"></div>
+          <h4 class="sec-title">🤖 Background Simulator (ubah saat berjalan)</h4>
+          <div class="toggle-group">
+            <label class="toggle"><input type="checkbox" id="gRedBot"><span>RedBot otonom</span></label>
+            <label class="toggle"><input type="checkbox" id="gBenign"><span>Benign traffic</span></label>
+          </div>
+          <h4 class="sec-title">👥 Peserta Terhubung</h4>
+          <div id="guruPeers" class="peer-list compact"></div>
+        </div>
+
+        <div class="card">
+          <h4 class="sec-title">🔐 Lembar Asesmen Guru (PIN)</h4>
+          <div id="pinGate">
+            <p class="hint">Skor angka disembunyikan dari murid. Masukkan PIN Guru untuk membuka lembar asesmen.</p>
+            <div class="row">
+              <input id="pinInput" type="password" inputmode="numeric" maxlength="8" placeholder="PIN Guru" style="max-width:160px">
+              <button class="btn btn-accent" data-act="pin-open">🔓 Buka</button>
+            </div>
+            <div id="pinErr" class="err"></div>
+          </div>
+          <div id="pinBody" hidden>
+            <div class="assess-head">
+              <div>
+                <b id="assessTitle">Lembar Asesmen</b>
+                <div class="hint" id="assessMeta"></div>
+              </div>
+              <div class="row">
+                <button class="btn btn-primary" data-act="reveal-scores" id="btnReveal">📢 Umumkan Skor ke Murid</button>
+                <button class="btn btn-ghost" data-act="pin-lock">🔒 Kunci Lagi</button>
+              </div>
+            </div>
+            <div id="assessContent"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h4 class="sec-title">✍️ Catatan Evaluasi Guru Pengampu</h4>
+          <textarea id="guruNote" rows="6" placeholder="Tuliskan catatan evaluasi untuk dicantumkan pada Berita Acara…"></textarea>
+          <div class="row"><button class="btn btn-mini" data-act="save-note">💾 Simpan Catatan</button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ ARSIP / BERITA ACARA ============ -->
+    <div class="panel" id="p-arsip">
+      <div class="panel-head no-print">
+        <h3>📜 Berita Acara Asesmen Sumatif Semester <small>arsip administrasi sekolah — siap cetak / PDF</small></h3>
+        <div class="row">
+          <button class="btn btn-primary" data-act="print-arsip">🖨 Cetak / Save as PDF</button>
+          <button class="btn" data-act="download-json">⬇ Unduh Arsip Data (JSON)</button>
+        </div>
+      </div>
+      <div class="arsip-scroll"><div id="beritaAcara" class="ba-doc"></div></div>
+    </div>
+
+    <!-- ============ PANDUAN ============ -->
+    <div class="panel" id="p-panduan">
+      <div class="panel-head no-print">
+        <h3>📖 Buku Panduan Teknis &amp; SOP Siswa <small>modul pegangan kelas — dapat dicetak</small></h3>
+        <div class="row">
+          <button class="btn" data-act="print-guide">🖨 Cetak Modul</button>
+        </div>
+      </div>
+      <div class="guide-scroll" id="guideBody"></div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ================= MODAL ================= -->
+<div class="modal" id="modal" hidden>
+  <div class="modal-box">
+    <div class="modal-head"><h3 id="modalTitle">—</h3><button class="modal-x" data-act="modal-close">✕</button></div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-foot" id="modalFoot"></div>
+  </div>
+</div>
+
+<div id="toastWrap"></div>
+
+<script src="js/data.js"></script>
+<script src="js/net.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/guide.js"></script>
+<script src="js/report.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/admin.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

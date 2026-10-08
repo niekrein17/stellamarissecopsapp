@@ -1,0 +1,15 @@
+# Dependensi
+node_modules/
+
+# Log & runtime
+*.log
+npm-debug.log*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Data lokal (opsional)
+*.local
