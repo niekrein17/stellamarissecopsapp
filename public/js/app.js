@@ -420,6 +420,7 @@ Service detection completed. <span class="t-warn">${n.critical ? 'Host bersifat 
         break;
       case 'print-guide':
         UI.closeModal();
+        UI.renderGuide();
         document.body.classList.add('print-guide');
         setTimeout(() => { window.print(); setTimeout(() => document.body.classList.remove('print-guide'), 400); }, 120);
         break;

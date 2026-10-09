@@ -204,6 +204,7 @@ Guru Penguji   : ${state.penguji.nama} — ${state.penguji.institusi}`;
       const p = $('#p-' + tab); if (p) p.classList.add('active');
     }
     if (tab === 'red' || tab === 'dual') setTimeout(() => { const t = $('#termInput'); if (t && window.innerWidth > 900) t.focus(); }, 60);
+    if (tab === 'panduan') renderGuide();
   }
 
   /* ================= RIBBON ================= */
@@ -617,8 +618,13 @@ Guru Penguji   : ${state.penguji.nama} — ${state.penguji.institusi}`;
   }
 
   /* ================= INIT ================= */
+  function renderGuide() {
+    const g = $('#guideBody');
+    if (g && window.Guide) g.innerHTML = window.Guide.html;
+  }
+
   function init() {
-    $('#guideBody').innerHTML = window.Guide.html;
+    renderGuide();
     populateSetup();
     $('#inJumlah').addEventListener('change', () => buildMembers());
     $('#inKelas').addEventListener('change', refreshKkm);
@@ -641,7 +647,7 @@ Guru Penguji   : ${state.penguji.nama} — ${state.penguji.institusi}`;
     populateSetup, buildMembers, collectMembers, refreshKkm,
     renderLobby, renderSim, renderLogs, renderSoar, renderRed, renderTopo, renderGuru,
     renderAssess, renderArsip, buildPlaybooks, termPush, termClear, termBanner, termSync,
-    mmss, labelRole, ns, S, clearSig,
+    mmss, labelRole, ns, S, clearSig, renderGuide,
     resetTerm() { termStarted = false; termSeenEvent = 0; clearSig(); }
   };
 })();

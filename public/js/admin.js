@@ -92,6 +92,7 @@ window.SuperAdmin = (function () {
     $$('#blueMembers input, #redMembers input').forEach(e => { e.disabled = p.locked; e.classList.toggle('sa-locked', p.locked); });
 
     renderBanner(p);
+    if (UI.renderGuide) UI.renderGuide();
     return p;
   }
 

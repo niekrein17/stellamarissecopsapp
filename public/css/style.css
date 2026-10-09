@@ -385,6 +385,9 @@ textarea{resize:vertical;line-height:1.5}
 .guide .callout{border-left:3px solid var(--amber);background:rgba(246,196,69,.07);padding:8px 12px;border-radius:0 7px 7px 0;margin:10px 0}
 .guide .callout.red{border-left-color:var(--red);background:rgba(255,77,109,.07)}
 .guide .callout.blue{border-left-color:var(--blue);background:rgba(59,167,255,.07)}
+.guide-ident{width:100%;max-width:640px;border-collapse:collapse;margin:6px 0 4px;font-size:12.5px}
+.guide-ident th,.guide-ident td{border:none;padding:3px 6px;text-align:left;vertical-align:top}
+.guide-ident th{width:34%;color:var(--cyan);font-weight:600;white-space:nowrap}
 
 /* ---------- modal ---------- */
 .modal{position:fixed;inset:0;background:rgba(3,6,12,.82);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px)}

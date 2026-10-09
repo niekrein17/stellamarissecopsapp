@@ -1,7 +1,32 @@
 'use strict';
-/* Stella Maris SecOps App - guide.js : Buku Panduan Teknis & SOP Siswa */
+/* Stella Maris SecOps App - guide.js : Buku Panduan Teknis & SOP Siswa
+ * Identitas penyelenggara (yayasan, sekolah, mapel, guru, pengawas) diambil dari
+ * profil SUPERADMIN saat render, sehingga kop & data panduan ikut berubah setelah
+ * data dikunci/disimpan. HTML dibangun ulang setiap kali diakses (getter `html`).
+ */
 window.Guide = (function () {
   const D = window.SMData;
+
+  function esc(s) {
+    if (window.Report && window.Report.esc) return window.Report.esc(s);
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  /* identitas aktif: profil SuperAdmin (bila ada) → fallback default */
+  function ident() {
+    const p = (window.SuperAdmin && window.SuperAdmin.load) ? window.SuperAdmin.load() : null;
+    return {
+      yayasan: (p && p.namaYayasan) || D.PENGUJI.yayasan,
+      sekolah: (p && p.namaSekolah) || D.PENGUJI.institusi,
+      alamat: (p && p.alamat) || D.PENGUJI.alamat,
+      kota: (p && p.kota) || D.PENGUJI.kota,
+      mapel: (p && p.namaMapel) || 'Dasar Keamanan Informasi / TJKT',
+      guru: (p && p.namaGuru) || D.PENGUJI.nama,
+      alias: (p && p.aliasGuru) || D.PENGUJI.alias,
+      pengawas: (p && p.pengawasUjian) || '',
+      aplikasi: D.PENGUJI.aplikasi
+    };
+  }
 
   function attackTable() {
     return `<table><thead><tr><th>Fase</th><th>Taktik MITRE</th><th>Teknik</th><th>Vektor Serangan</th><th>Target</th><th>Playbook Penangkal</th></tr></thead><tbody>` +
@@ -34,17 +59,35 @@ window.Guide = (function () {
       }).join('') + `</tbody></table>`;
   }
 
-  const html = `
+  function identityTable(id) {
+    const row = (k, v) => `<tr><th>${k}</th><td>: ${v || '—'}</td></tr>`;
+    return `<table class="guide-ident"><tbody>
+      ${row('Nama Yayasan', esc(id.yayasan))}
+      ${row('Nama Sekolah', esc(id.sekolah))}
+      ${row('Alamat', esc(id.alamat) + (id.kota ? ' • ' + esc(id.kota) : ''))}
+      ${row('Mata Pelajaran', esc(id.mapel))}
+      ${row('Guru Pengampu / Penguji', esc(id.guru) + (id.alias ? ' (' + esc(id.alias) + ')' : ''))}
+      ${row('Pengawas Ujian', esc(id.pengawas))}
+    </tbody></table>`;
+  }
+
+  function render() {
+    const id = ident();
+    return `
 <div class="guide" id="guidePrint">
   <div class="ba-kop" style="border-color:#2a3d5f">
-    <div class="y">${D.PENGUJI.yayasan}</div>
-    <div class="n">Buku Panduan Teknis &amp; SOP Siswa</div>
-    <div class="a">${D.PENGUJI.aplikasi} — Cyber Range Simulator (SIEM &amp; SOAR)</div>
-    <div class="al">${D.PENGUJI.institusi} • Pengampu: ${D.PENGUJI.nama} (${D.PENGUJI.alias})</div>
+    <div class="y">${esc(id.yayasan)}</div>
+    <div class="n">${esc(id.sekolah)}</div>
+    <div class="a">Buku Panduan Teknis &amp; SOP Siswa</div>
+    <div class="al">${esc(id.aplikasi)} — Cyber Range Simulator (SIEM &amp; SOAR)</div>
+    <div class="al">${esc(id.alamat)}${id.kota ? ' • ' + esc(id.kota) : ''}</div>
   </div>
 
+  <h2>Identitas Penyelenggara</h2>
+  ${identityTable(id)}
+
   <h2>1. Pendahuluan</h2>
-  <p><b>Stella Maris SecOps App</b> adalah cyber range simulator untuk praktik Security Operations Center (SOC) di lingkungan sekolah.
+  <p><b>${esc(id.aplikasi)}</b> adalah cyber range simulator untuk praktik Security Operations Center (SOC) di lingkungan sekolah.
   Aplikasi menggabungkan dua kemampuan industri: <b>SIEM</b> (Security Information and Event Management) untuk mengumpulkan, menyaring,
   dan menganalisis log keamanan secara real-time, serta <b>SOAR</b> (Security Orchestration, Automation and Response) untuk mengeksekusi
   playbook mitigasi secara terotomasi maupun manual.</p>
@@ -95,7 +138,7 @@ arsenal                   tampilkan 8 vektor MITRE + status kesiapan
 man sqli                  penjelasan rinci satu vektor
 scan                      alias cepat: jalankan Reconnaissance
 run sqli ; run brute      luncurkan vektor
-ip 45.155.205.99          ganti IP sumber serangan
+ip 203.0.113.66           ganti IP sumber serangan
 proxy on ; proxy off      rantai proxy (IP berotasi tiap serangan)
 access ; flags ; exfil    status foothold/root, CTF flag, volume bocor
 history ; clear           riwayat perintah / bersihkan layar</pre>
@@ -184,9 +227,10 @@ Pola trafik wajar (tandai FP)
   </tbody></table>
 
   <div class="ba-foot" style="border-color:#2a3d5f;color:#8fa3c0">
-    ${D.PENGUJI.aplikasi} • ${D.PENGUJI.institusi} • Disusun oleh ${D.PENGUJI.nama} (${D.PENGUJI.alias}) bersama GAIS • Tahun 2026
+    ${esc(id.aplikasi)} • ${esc(id.sekolah)} • Disusun oleh ${esc(id.guru)}${id.alias ? ' (' + esc(id.alias) + ')' : ''} bersama GAIS • Tahun 2026
   </div>
 </div>`;
+  }
 
-  return { html };
+  return { get html() { return render(); }, render, ident };
 })();
